@@ -41,6 +41,26 @@ const PatientInfo = ({ patients }) => {
     }
   };
 
+  const downloadPdf = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8080/patient/${id}/pdf`, {
+        method: "GET",
+        headers: {
+          Accept: "application/pdf",
+        },
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        window.open(url, "_blank");
+      } else {
+        console.error("Failed to download PDF");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
       <div>
       <Appbar />
@@ -89,6 +109,14 @@ const PatientInfo = ({ patients }) => {
           onClick={() => handleUpdate(patient.id)}
         >
           Submit
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => downloadPdf(patient.id)}
+          style={{ marginLeft: "10px" }}
+        >
+          PDF Erstellen
         </Button>
       </Box>
       </Box>

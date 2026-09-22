@@ -4,22 +4,14 @@ import com.code.patientsystem.components.PatientAssist;
 import com.code.patientsystem.model.Patient;
 import com.code.patientsystem.repository.PatientRepository;
 import com.code.patientsystem.service.PatientService;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.springframework.http.HttpHeaders;
 
 @RestController
 @RequestMapping("/patient")
@@ -73,6 +65,11 @@ public class PatientController {
     @GetMapping("/excel")
     public ResponseEntity<Resource> generateExcel() throws IOException {
         return patientAssist.generateExcel();
+    }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<Resource> generatePdf(@PathVariable int id) throws IOException {
+        return patientAssist.generatePdf(id);
     }
 
 }
