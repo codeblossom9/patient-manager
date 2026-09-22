@@ -7,6 +7,8 @@ import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.borders.Border;
+import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.Cell;
 import com.itextpdf.layout.element.Paragraph;
 import com.itextpdf.layout.element.Table;
@@ -118,76 +120,133 @@ public class PatientAssist {
         PdfWriter writer = new PdfWriter(outputStream);
         PdfDocument pdf = new PdfDocument(writer);
         Document document = new Document(pdf);
-
-        // Header / Logo area
-        document.add(new Paragraph("Healthcare hospital")
-                .setFontSize(24)
-                .setItalic()
-                .setFontColor(new DeviceRgb(0, 51, 102))
-                .setTextAlignment(TextAlignment.LEFT));
         
-        document.add(new Paragraph("Health Care Center\n123 Medical Drive, Cologne City\nPhone: (555) 0123-4567")
-                .setFontSize(10)
-                .setFontColor(new DeviceRgb(100, 100, 100))
-                .setTextAlignment(TextAlignment.LEFT));
+        DeviceRgb primaryColor = new DeviceRgb(25, 118, 210); // Material Blue
+        DeviceRgb lightGray = new DeviceRgb(245, 245, 245);
+        DeviceRgb textGray = new DeviceRgb(100, 100, 100);
 
-        document.add(new Paragraph("\n"));
-        document.add(new Paragraph("PATIENTENBERICHT")
-                .setFontSize(22)
+        // Header Table
+        Table headerTable = new Table(UnitValue.createPercentArray(new float[]{60, 40})).useAllAvailableWidth();
+        headerTable.setMarginBottom(20);
+        
+        Cell titleCell = new Cell().add(new Paragraph("Healthcare Hospital")
+                .setFontSize(26)
                 .setBold()
-                .setUnderline()
-                .setFontColor(new DeviceRgb(0, 0, 255))
-                .setTextAlignment(TextAlignment.CENTER));
-        document.add(new Paragraph("\n"));
+                .setFontColor(primaryColor))
+                .setBorder(Border.NO_BORDER)
+                .setVerticalAlignment(com.itextpdf.layout.properties.VerticalAlignment.MIDDLE);
+        
+        Cell contactCell = new Cell().add(new Paragraph("Health Care Center\n123 Medical Drive, Cologne City\nPhone: (555) 0123-4567\nwww.healthcare-hosp.com")
+                .setFontSize(9)
+                .setFontColor(textGray)
+                .setTextAlignment(TextAlignment.RIGHT))
+                .setBorder(Border.NO_BORDER);
+        
+        headerTable.addCell(titleCell);
+        headerTable.addCell(contactCell);
+        document.add(headerTable);
 
-        // Patient Details Section
-        document.add(new Paragraph("Patienten Details").setBold().setFontSize(14).setFontColor(new DeviceRgb(0, 0, 255)));
-        document.add(new Paragraph("Name: ").add(patient.getName() != null ? patient.getName() : "N/A"));
-        document.add(new Paragraph("Adresse: ").add(patient.getAddress() != null ? patient.getAddress() : "N/A"));
+        // Line separator
+        document.add(new Paragraph("").setBorderBottom(new SolidBorder(primaryColor, 1)).setMarginBottom(20));
+
+        // Report Title
+        document.add(new Paragraph("PATIENTENBERICHT / MEDICAL REPORT")
+                .setFontSize(18)
+                .setBold()
+                .setMarginBottom(20)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setFontColor(primaryColor));
+
+        // Patient Info Section
+        document.add(new Paragraph("Patienteninformationen").setBold().setFontSize(14).setMarginBottom(10).setFontColor(primaryColor));
         
-        document.add(new Paragraph("\n"));
+        Table infoTable = new Table(UnitValue.createPercentArray(new float[]{30, 70})).useAllAvailableWidth();
+        infoTable.setMarginBottom(20);
+
+        addInfoRow(infoTable, "Name:", patient.getName() != null ? patient.getName() : "N/A", lightGray);
+        addInfoRow(infoTable, "Adresse:", patient.getAddress() != null ? patient.getAddress() : "N/A", null);
+        addInfoRow(infoTable, "Patienten-ID:", String.valueOf(patient.getId()), lightGray);
         
-        // Medical Info Section
-        document.add(new Paragraph("Medizinische Informationen").setBold().setFontSize(14).setFontColor(new DeviceRgb(0, 0, 255)));
-        document.add(new Paragraph("Krankheit: ").add(patient.getIllness() != null ? patient.getIllness() : "N/A"));
-        document.add(new Paragraph("Medikamente: ").add(patient.getMedicament() != null ? patient.getMedicament() : "N/A"));
+        document.add(infoTable);
+
+        // Medical Details Section
+        document.add(new Paragraph("Diagnose & Behandlung").setBold().setFontSize(14).setMarginBottom(10).setFontColor(primaryColor));
         
-        document.add(new Paragraph("\n"));
+        Table medicalTable = new Table(UnitValue.createPercentArray(new float[]{30, 70})).useAllAvailableWidth();
+        medicalTable.setMarginBottom(20);
+
+        addInfoRow(medicalTable, "Erkrankung:", patient.getIllness() != null ? patient.getIllness() : "N/A", lightGray);
+        addInfoRow(medicalTable, "Medikation:", patient.getMedicament() != null ? patient.getMedicament() : "N/A", null);
         
-        // Report Section
-        document.add(new Paragraph("Ärztlicher Bericht").setBold().setFontSize(14).setFontColor(new DeviceRgb(0, 0, 255)));
-        document.add(new Paragraph(patient.getReport() != null ? patient.getReport() : "Kein Bericht verfügbar."));
+        document.add(medicalTable);
+
+        // Detailed Report Section
+        document.add(new Paragraph("Ärztlicher Befund").setBold().setFontSize(14).setMarginBottom(10).setFontColor(primaryColor));
+        
+        Cell reportContent = new Cell().add(new Paragraph(patient.getReport() != null && !patient.getReport().isEmpty() ? patient.getReport() : "Kein ausführlicher Bericht verfügbar."))
+                .setPadding(10)
+                .setBackgroundColor(lightGray)
+                .setBorder(new SolidBorder(new DeviceRgb(200, 200, 200), 0.5f));
+        
+        Table reportTable = new Table(UnitValue.createPercentArray(new float[]{100})).useAllAvailableWidth();
+        reportTable.addCell(reportContent);
+        reportTable.setMarginBottom(40);
+        document.add(reportTable);
 
         // Signature Section
-        document.add(new Paragraph("\n\n\n\n"));
-        
         Table signatureTable = new Table(UnitValue.createPercentArray(new float[]{50, 50})).useAllAvailableWidth();
-        signatureTable.setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
         
-        Cell dateCell = new Cell().add(new Paragraph("Datum: ____________________"))
-                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+        Cell dateCell = new Cell().add(new Paragraph("Datum: ____________________\n(Ausstellungsdatum)"))
+                .setBorder(Border.NO_BORDER)
+                .setFontSize(10)
                 .setTextAlignment(TextAlignment.LEFT);
-        Cell signCell = new Cell().add(new Paragraph("Unterschrift: ____________________"))
-                .setBorder(com.itextpdf.layout.borders.Border.NO_BORDER)
+        
+        Cell signCell = new Cell().add(new Paragraph("__________________________\nUnterschrift des Arztes / Stempel"))
+                .setBorder(Border.NO_BORDER)
+                .setFontSize(10)
                 .setTextAlignment(TextAlignment.RIGHT);
         
         signatureTable.addCell(dateCell);
         signatureTable.addCell(signCell);
         
         document.add(signatureTable);
+        
+        // Footer
+        document.add(new Paragraph("Dieses Dokument wurde elektronisch erstellt und ist ohne manuelle Unterschrift gültig.")
+                .setFontSize(8)
+                .setFontColor(textGray)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setFixedPosition(36, 20, 523));
 
         document.close();
 
         ByteArrayResource resource = new ByteArrayResource(outputStream.toByteArray());
 
         HttpHeaders headers = new HttpHeaders();
-        // Change attachment to inline to help preview, but download can also be handled by frontend
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=patient_report_" + id + ".pdf");
 
         return ResponseEntity.ok()
                 .headers(headers)
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(resource);
+    }
+
+    private void addInfoRow(Table table, String label, String value, DeviceRgb bgColor) {
+        Cell labelCell = new Cell().add(new Paragraph(label).setBold())
+                .setBorder(new SolidBorder(DeviceRgb.WHITE, 1))
+                .setPadding(5);
+        
+        Cell valueCell = new Cell().add(new Paragraph(value))
+                .setBorder(new SolidBorder(DeviceRgb.WHITE, 1))
+                .setPadding(5);
+        
+        if (bgColor != null) {
+            labelCell.setBackgroundColor(bgColor);
+            valueCell.setBackgroundColor(bgColor);
+        }
+        
+        table.addCell(labelCell);
+        table.addCell(valueCell);
     }
 
 }
