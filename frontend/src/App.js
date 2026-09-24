@@ -4,6 +4,9 @@ import Home from "./components/Home";
 import NewPage from "./components/NewPage";
 import PatientInfo from "./components/PatientInfo";
 import React, { useEffect } from "react";
+import { ThemeProvider } from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
+import theme from "./theme";
 
 const App = () => {
   const [patients, setPatients] = React.useState([]);
@@ -23,16 +26,19 @@ const App = () => {
   }, []);
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home patients={patients} />} />
-        <Route
-          path="/patients/:id"
-          element={<PatientInfo patients={patients} />}
-        />
-        <Route path="/new" element={<NewPage />} />
-      </Routes>
-    </Router>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home patients={patients} />} />
+          <Route
+            path="/patients/:id"
+            element={<PatientInfo patients={patients} />}
+          />
+          <Route path="/new" element={<NewPage />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 };
 

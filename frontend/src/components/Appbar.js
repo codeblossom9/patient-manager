@@ -11,8 +11,14 @@ import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
+import ListItemIcon from "@mui/material/ListItemIcon";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
+import HomeIcon from "@mui/icons-material/Home";
+import PeopleIcon from "@mui/icons-material/People";
+import InfoIcon from "@mui/icons-material/Info";
+import ContactMailIcon from "@mui/icons-material/ContactMail";
+import { useNavigate } from "react-router-dom";
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
@@ -57,10 +63,18 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 export default function SearchAppBar() {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const navigate = useNavigate();
+
+  const menuItems = [
+    { text: "Home", icon: <HomeIcon />, path: "/" },
+    { text: "Patienten", icon: <PeopleIcon />, path: "/" },
+    { text: "Über uns", icon: <InfoIcon />, path: "/" },
+    { text: "Kontakt", icon: <ContactMailIcon />, path: "/" },
+  ];
 
   return (
     <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static">
+      <AppBar position="sticky" elevation={0} sx={{ borderBottom: "1px solid rgba(0, 0, 0, 0.12)" }}>
         <Toolbar>
           <IconButton
             size="large"
@@ -77,7 +91,8 @@ export default function SearchAppBar() {
             variant="h6"
             noWrap
             component="div"
-            sx={{ flexGrow: 1, display: { xs: "none", sm: "block" } }}
+            sx={{ flexGrow: 1, display: { xs: "none", sm: "block" }, cursor: "pointer", fontWeight: "bold" }}
+            onClick={() => navigate("/")}
           >
             Healthcare Hospital
           </Typography>
@@ -99,49 +114,36 @@ export default function SearchAppBar() {
           open={drawerOpen}
           onClose={() => setDrawerOpen(false)}
         >
-          <Box sx={{ width: 250 }} role="presentation">
+          <Box sx={{ width: 280, pt: 2 }} role="presentation">
+            <Typography variant="h6" sx={{ px: 2, pb: 2, color: "primary.main", fontWeight: "bold" }}>
+              Healthcare Hospital
+            </Typography>
             <List>
-              <ListItem disablePadding>
-                <ListItemButton onClick={() => setDrawerOpen(false)}
-                  sx={{
-                    color: "primary.main",
-                    borderBottom: "1px solid #ddd",
-                    "&:hover": {
-                      backgroundColor: "primary.main",
-                      color: "white",
-                    },
-                  }}>
-                  <ListItemText primary="Patienten" />
-                </ListItemButton>
-              </ListItem>
-
-              <ListItem disablePadding>
-                <ListItemButton onClick={() => setDrawerOpen(false)}
-                  sx={{
-                    color: "primary.main",
-                    borderBottom: "1px solid #ddd",
-                    "&:hover": {
-                      backgroundColor: "primary.main",
-                      color: "white",
-                    },
-                  }}>
-                  <ListItemText primary="Über uns" />
-                </ListItemButton>
-              </ListItem>
-
-              <ListItem disablePadding>
-                <ListItemButton onClick={() => setDrawerOpen(false)}
-                  sx={{
-                    color: "primary.main",
-                    borderBottom: "1px solid #ddd",
-                    "&:hover": {
-                      backgroundColor: "primary.main",
-                      color: "white",
-                    },
-                  }}>
-                  <ListItemText primary="Kontakt" />
-                </ListItemButton>
-              </ListItem>
+              {menuItems.map((item) => (
+                <ListItem key={item.text} disablePadding>
+                  <ListItemButton 
+                    onClick={() => {
+                      navigate(item.path);
+                      setDrawerOpen(false);
+                    }}
+                    sx={{
+                      mx: 1,
+                      borderRadius: 2,
+                      "&:hover": {
+                        backgroundColor: "primary.light",
+                        color: "white",
+                        "& .MuiListItemIcon-root": {
+                          color: "white",
+                        },
+                      },
+                    }}>
+                    <ListItemIcon sx={{ color: "primary.main" }}>
+                      {item.icon}
+                    </ListItemIcon>
+                    <ListItemText primary={item.text} />
+                  </ListItemButton>
+                </ListItem>
+              ))}
             </List>
           </Box>
         </Drawer>

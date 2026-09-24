@@ -1,11 +1,17 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
-import { Paper, Button, Autocomplete, Grid } from "@mui/material";
+import { Paper, Button, Autocomplete, Grid, Typography, Card, CardContent, CardActions, IconButton, Tooltip, Divider, Stack, CircularProgress, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import AddIcon from "@mui/icons-material/Add";
+import SearchIcon from "@mui/icons-material/Search";
 
 export default function Patient() {
-  const paperStyle = { padding: "50px 20px", width: 600, margin: "20px auto" };
+  const paperStyle = { padding: "30px 20px", margin: "20px auto" };
 
   // Global states for adding new patient
   const [name, setName] = React.useState("");
@@ -14,12 +20,14 @@ export default function Patient() {
   const [medicament, setMedicament] = React.useState("");
 
   const [patients, setPatients] = React.useState([]);
-  const [divVisibility, setDivVisibility] = React.useState(false);
   const [selectedName, setSelectedName] = React.useState(null);
   const [relatedData, setRelatedData] = React.useState([]);
 
   const [showForm, setShowForm] = React.useState({});
   const [editValues, setEditValues] = React.useState({});
+
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(null);
 
   const navigate = useNavigate();
 
@@ -72,9 +80,6 @@ export default function Patient() {
     });
   };
 
-  const showPatients = () => {
-    setDivVisibility((prev) => !prev);
-  };
 
   const handleDelete = (id) => {
     fetch(`http://localhost:8080/patient/delete/${id}`, {
@@ -85,15 +90,20 @@ export default function Patient() {
   };
 
   const fetchPatients = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const response = await fetch("http://localhost:8080/patient/getAll");
       if (!response.ok) {
-        throw new Error("Failed to fetch patients");
+        throw new Error("Fehler beim Laden der Patientenliste.");
       }
       const data = await response.json();
       setPatients(data);
     } catch (error) {
       console.error(error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -129,202 +139,226 @@ export default function Patient() {
   };
 
   return (
-    <Grid container spacing={1} justify="center">
-      <Grid item xs>
-        <Paper elevation={3} style={paperStyle}>
-          <h1 style={{ color: "blue" }}>Neuen Patienten hinzufügen</h1>
-          <Box
-            component="form"
-            sx={{ "& > :not(style)": { m: 1 } }}
-            noValidate
-            autoComplete="off"
-          >
-            {/* ADD Patient Form */}
-            <TextField
-              label="Patientenname"
-              variant="outlined"
-              fullWidth
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <TextField
-              label="Patientenadresse"
-              variant="outlined"
-              fullWidth
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-            <TextField
-              label="Patientenerkrankung"
-              variant="outlined"
-              fullWidth
-              value={illness}
-              onChange={(e) => setIllness(e.target.value)}
-            />
-            <TextField
-              label="Medikamente des Patienten"
-              variant="outlined"
-              fullWidth
-              value={medicament}
-              onChange={(e) => setMedicament(e.target.value)}
-            />
-            <Button variant="contained" color="secondary" onClick={handleSubmit}>
-              Speichern
-            </Button>
-            <Button variant="contained" color="primary" onClick={showPatients}>
-              Patientenliste anzeigen
-            </Button>
-            <Button variant="contained" color="secondary" onClick={handleButtonClick}>
-              Excel-Bericht erstellen
-            </Button>
-            {/*
-            <Button variant="contained" color="primary" onClick={() => showInfo("/new")}>
-              New Page
-            </Button>
-            */}
-
-            <div>
-              <Autocomplete
-                id="free-solo"
-                options={patients.map((p) => p.name)}
-                value={selectedName}
-                onChange={handleSelection}
-                renderInput={(params) => <TextField {...params} label="Suchen" />}
-              />
-
-              <ul>
-                {relatedData.map((item) => (
-                  <h4 key={item.id}>
-                    Name: {item.name} <br />
-                    Krankheit: {item.illness} <br />
-                    Medikamente: {item.medicament}
-                  </h4>
-                ))}
-              </ul>
-            </div>
-          </Box>
-        </Paper>
-      </Grid>
-
-      {/* PATIENT LIST + EDIT */}
-      {divVisibility && (
-        <Grid item xs={6}>
+    <Box sx={{ p: 3, maxWidth: 1200, margin: "auto" }}>
+      <Grid container spacing={4}>
+        {/* ADD Patient Form */}
+        <Grid item xs={12} md={5}>
           <Paper elevation={3} style={paperStyle}>
-            {patients.map((patient) => (
-              <Paper
-                key={patient.id}
-                elevation={6}
-                style={{ margin: "10px", padding: "15px", textAlign: "left" }}
+            <Typography variant="h5" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <AddIcon /> Neuen Patienten hinzufügen
+            </Typography>
+            <Divider sx={{ mb: 3 }} />
+            <Stack spacing={2} component="form" noValidate autoComplete="off">
+              <TextField
+                label="Patientenname"
+                variant="outlined"
+                fullWidth
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+              <TextField
+                label="Patientenadresse"
+                variant="outlined"
+                fullWidth
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+              <TextField
+                label="Patientenerkrankung"
+                variant="outlined"
+                fullWidth
+                value={illness}
+                onChange={(e) => setIllness(e.target.value)}
+              />
+              <TextField
+                label="Medikamente des Patienten"
+                variant="outlined"
+                fullWidth
+                value={medicament}
+                onChange={(e) => setMedicament(e.target.value)}
+              />
+              <Button 
+                variant="contained" 
+                color="primary" 
+                size="large"
+                startIcon={<AddIcon />}
+                onClick={handleSubmit}
+                sx={{ mt: 2 }}
               >
-                Name: {patient.name}
-                <br />
-                Adresse: {patient.address}
-                <br />
-                Krankheit: {patient.illness}
-                <br />
-                Medikamente: {patient.medicament}
-                <br />
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleDelete(patient.id)}
-                >
-                  Löschen
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  sx={{ m: 1 }}
-                  onClick={() => handleEditClick(patient.id, patient)}
-                >
-                  Bearbeiten
-                </Button>
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => showInfo(`/patients/${patient.id}`)}
-                >
-                  Patienteninformationen zeigen
-                </Button>
-
-                {showForm[patient.id] && (
-                  <div>
-                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1, mt: 1 }}>
-                      <TextField
-                        label="Name"
-                        size="small"
-                        fullWidth
-                        value={editValues[patient.id]?.name || ""}
-                        onChange={(e) =>
-                          setEditValues((prev) => ({
-                            ...prev,
-                            [patient.id]: {
-                              ...prev[patient.id],
-                              name: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                      <TextField
-                        label="Adresse"
-                        size="small"
-                        fullWidth
-                        value={editValues[patient.id]?.address || ""}
-                        onChange={(e) =>
-                          setEditValues((prev) => ({
-                            ...prev,
-                            [patient.id]: {
-                              ...prev[patient.id],
-                              address: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                      <TextField
-                        label="Krankheit"
-                        size="small"
-                        fullWidth
-                        value={editValues[patient.id]?.illness || ""}
-                        onChange={(e) =>
-                          setEditValues((prev) => ({
-                            ...prev,
-                            [patient.id]: {
-                              ...prev[patient.id],
-                              illness: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                      <TextField
-                        label="Medikamente"
-                        size="small"
-                        fullWidth
-                        value={editValues[patient.id]?.medicament || ""}
-                        onChange={(e) =>
-                          setEditValues((prev) => ({
-                            ...prev,
-                            [patient.id]: {
-                              ...prev[patient.id],
-                              medicament: e.target.value,
-                            },
-                          }))
-                        }
-                      />
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        onClick={() => handleUpdate(patient.id)}
-                      >
-                        Aktualisieren
-                      </Button>
-                    </Box>
-                  </div>
-                )}
-              </Paper>
-            ))}
+                Speichern
+              </Button>
+            </Stack>
           </Paper>
+
+          <Paper elevation={3} style={{ ...paperStyle, marginTop: "20px" }}>
+             <Typography variant="h6" color="primary" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <SearchIcon /> Patient suchen
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Autocomplete
+              id="free-solo"
+              options={patients.map((p) => p.name)}
+              value={selectedName}
+              onChange={handleSelection}
+              renderInput={(params) => <TextField {...params} label="Name suchen..." />}
+            />
+
+            {relatedData.length > 0 && (
+              <Box sx={{ mt: 2, p: 2, bgcolor: "background.default", borderRadius: 2 }}>
+                {relatedData.map((item) => (
+                  <Box key={item.id} sx={{ mb: 1 }}>
+                    <Typography variant="subtitle1" fontWeight="bold">{item.name}</Typography>
+                    <Typography variant="body2">Krankheit: {item.illness}</Typography>
+                    <Typography variant="body2">Medikamente: {item.medicament}</Typography>
+                    <Button 
+                      size="small" 
+                      onClick={() => showInfo(`/patients/${item.id}`)}
+                      sx={{ mt: 1 }}
+                    >
+                      Details ansehen
+                    </Button>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Paper>
+
+          <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+            <Button 
+              fullWidth
+              variant="contained" 
+              color="secondary" 
+              startIcon={<FileDownloadIcon />}
+              onClick={handleButtonClick}
+            >
+              Excel Export
+            </Button>
+          </Stack>
         </Grid>
-      )}
-    </Grid>
+
+        {/* PATIENT LIST + EDIT */}
+        <Grid item xs={12} md={7}>
+          <Box>
+              <Typography variant="h5" color="primary" gutterBottom>
+                Patientenliste
+              </Typography>
+              <Divider sx={{ mb: 3 }} />
+              <Grid container spacing={2}>
+                {patients.map((patient) => (
+                  <Grid item xs={12} key={patient.id}>
+                    <Card elevation={2} sx={{ borderRadius: 3, borderLeft: "5px solid", borderColor: "primary.main" }}>
+                      <CardContent>
+                        <Grid container justifyContent="space-between" alignItems="flex-start">
+                          <Grid item>
+                            <Typography variant="h6" component="div">{patient.name}</Typography>
+                            <Typography color="text.secondary" variant="body2">{patient.address}</Typography>
+                            <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                              <Typography variant="caption" sx={{ bgcolor: 'primary.light', color: 'white', px: 1, borderRadius: 1 }}>
+                                {patient.illness}
+                              </Typography>
+                            </Stack>
+                          </Grid>
+                          <Grid item>
+                            <Tooltip title="Details">
+                              <IconButton color="primary" onClick={() => showInfo(`/patients/${patient.id}`)}>
+                                <VisibilityIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Bearbeiten">
+                              <IconButton color="info" onClick={() => handleEditClick(patient.id, patient)}>
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Löschen">
+                              <IconButton color="error" onClick={() => handleDelete(patient.id)}>
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </Grid>
+                        </Grid>
+
+                        {showForm[patient.id] && (
+                          <Box sx={{ mt: 2, p: 2, bgcolor: "grey.50", borderRadius: 2 }}>
+                            <Stack spacing={1.5}>
+                              <TextField
+                                label="Name"
+                                size="small"
+                                fullWidth
+                                value={editValues[patient.id]?.name || ""}
+                                onChange={(e) =>
+                                  setEditValues((prev) => ({
+                                    ...prev,
+                                    [patient.id]: {
+                                      ...prev[patient.id],
+                                      name: e.target.value,
+                                    },
+                                  }))
+                                }
+                              />
+                              <TextField
+                                label="Adresse"
+                                size="small"
+                                fullWidth
+                                value={editValues[patient.id]?.address || ""}
+                                onChange={(e) =>
+                                  setEditValues((prev) => ({
+                                    ...prev,
+                                    [patient.id]: {
+                                      ...prev[patient.id],
+                                      address: e.target.value,
+                                    },
+                                  }))
+                                }
+                              />
+                              <TextField
+                                label="Krankheit"
+                                size="small"
+                                fullWidth
+                                value={editValues[patient.id]?.illness || ""}
+                                onChange={(e) =>
+                                  setEditValues((prev) => ({
+                                    ...prev,
+                                    [patient.id]: {
+                                      ...prev[patient.id],
+                                      illness: e.target.value,
+                                    },
+                                  }))
+                                }
+                              />
+                              <TextField
+                                label="Medikamente"
+                                size="small"
+                                fullWidth
+                                value={editValues[patient.id]?.medicament || ""}
+                                onChange={(e) =>
+                                  setEditValues((prev) => ({
+                                    ...prev,
+                                    [patient.id]: {
+                                      ...prev[patient.id],
+                                      medicament: e.target.value,
+                                    },
+                                  }))
+                                }
+                              />
+                              <Button
+                                variant="contained"
+                                color="success"
+                                size="small"
+                                onClick={() => handleUpdate(patient.id)}
+                              >
+                                Speichern
+                              </Button>
+                            </Stack>
+                          </Box>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+        </Grid>
+      </Grid>
+    </Box>
   );
 }
