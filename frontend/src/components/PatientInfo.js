@@ -21,7 +21,7 @@ const PatientInfo = ({ patients }) => {
   });
 
   if (!patient) {
-    return <div>Patient not found</div>;
+    return <div>Patient nicht gefunden</div>;
   }
 
   const handleUpdate = async (id) => {

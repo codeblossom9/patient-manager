@@ -31,9 +31,8 @@ public class PatientController {
     }
 
     @PostMapping("/add")
-    public String add(@RequestBody Patient patient){
-        patientService.savePatientInfo(patient);
-        return "new patient is added";
+    public Patient add(@RequestBody Patient patient){
+        return patientService.savePatientInfo(patient);
     }
 
     @GetMapping("/getAll")
