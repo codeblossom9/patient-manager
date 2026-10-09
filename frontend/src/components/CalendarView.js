@@ -1,22 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Paper, 
-  Typography, 
-  Box, 
-  Grid, 
-  Card, 
-  CardContent, 
-  Divider, 
-  Select, 
-  MenuItem, 
-  FormControl, 
-  InputLabel 
+import {
+  Paper,
+  Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Divider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Popover,
+  List,
+  ListItem,
+  ListItemText
 } from '@mui/material';
 
 const CalendarView = () => {
   const [appointments, setAppointments] = useState([]);
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth());
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedDayAppointments, setSelectedDayAppointments] = useState([]);
+
+  const handleDayClick = (event, dateStr, dayAppointments) => {
+    setAnchorEl(event.currentTarget);
+    setSelectedDay(dateStr);
+    setSelectedDayAppointments(dayAppointments);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+    setSelectedDay(null);
+  };
+
+  const popoverOpen = Boolean(anchorEl);
 
   useEffect(() => {
     fetch("http://localhost:8080/appointment/getAll")
@@ -43,7 +63,20 @@ const CalendarView = () => {
       const dayAppointments = appointments.filter(app => app.appointmentDate.startsWith(dateStr));
 
       days.push(
-        <Grid item xs={12 / 7} key={d} sx={{ border: '1px solid #eee', minHeight: 100, p: 0.5, bgcolor: dayAppointments.length > 0 ? 'action.hover' : 'background.paper' }}>
+        <Grid
+          item
+          xs={12 / 7}
+          key={d}
+          onClick={(e) => handleDayClick(e, dateStr, dayAppointments)}
+          sx={{
+            border: '1px solid #eee',
+            minHeight: 100,
+            p: 0.5,
+            cursor: 'pointer',
+            bgcolor: dayAppointments.length > 0 ? 'action.hover' : 'background.paper',
+            '&:hover': { bgcolor: 'action.selected' }
+          }}
+        >
           <Typography variant="caption" sx={{ fontWeight: 'bold' }}>{d}</Typography>
           {dayAppointments.map(app => (
             <Box key={app.id} sx={{ bgcolor: 'primary.main', color: 'white', borderRadius: 1, px: 0.5, mb: 0.5, fontSize: '0.7rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -95,6 +128,37 @@ const CalendarView = () => {
         ))}
         {renderCalendar()}
       </Grid>
+
+      <Popover
+        open={popoverOpen}
+        anchorEl={anchorEl}
+        onClose={handlePopoverClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Box sx={{ p: 2, minWidth: 220, maxWidth: 300 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+            {selectedDay}
+          </Typography>
+          <Divider sx={{ mb: 1 }} />
+          {selectedDayAppointments.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              Keine Termine an diesem Tag.
+            </Typography>
+          ) : (
+            <List dense disablePadding>
+              {selectedDayAppointments.map(app => (
+                <ListItem key={app.id} disableGutters>
+                  <ListItemText
+                    primary={app.patient.name}
+                    secondary={new Date(app.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </Box>
+      </Popover>
     </Paper>
   );
 };
